@@ -1,15 +1,14 @@
 use strict;
-
+use warnings;
 use RockFightBot;
 
 my $bot = EchoBot->new(
 	server => "moo.slashnet.org",
 	port   => "6667",
-	channels => ['#totse'],
-
-	nick      => "RFB",
+	nick      => shift @ARGV,
 	username  => "RFBLOL",
 	name      => "RFBROFLLMAO",
+	channels => [@ARGV],
 );
 
 $bot->run();

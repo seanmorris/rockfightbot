@@ -26,6 +26,13 @@ sub interpret{
 		$self->registerPlayer($message->{who});
 	}
 
+	if((time() - $self->{players}{$1}{lastTurn}) < 5)
+	{
+		return;
+	}
+	
+	$self->{players}{$1}{lastTurn} = time();
+
 	if($message->{body} =~ /heals (\S+)/ && $emoted)
 	{
 		if($1 eq $message->{who})
@@ -43,6 +50,8 @@ sub interpret{
 			$self->registerPlayer($1);
 		}
 
+		$self->{players}{$1}{lastTurn} = time();
+		
 		if($self->{players}{$1}{isOnFire})
 		{
 			$self->{players}{$1}{isOnFire} = 0;
@@ -127,7 +136,7 @@ sub interpret{
 		}
 	}
 
-	if($message->{body} =~ /throws a (magic )?rock at (\S+)/)
+	if($message->{body} =~ /throws a (magi)?rock at (\S+)/)
 	{
 		if($2 eq $message->{who})
 		{
@@ -163,14 +172,14 @@ sub interpret{
 
 		if(!$self->{players}{$playerHit}{hp})
 		{
-			return $playerHit . ' is dead. Stop it.';
+			return sprintf $playerHit . ' is dead. Stop it, %s', $message->{who};
 		}
 
 		my $hit = int(rand(10));
 
 		if($hit < 2)
 		{
-			return 'The rock missed ' . $playerHit . '.';
+			return sprintf '%s\'s rock missed ' . $playerHit . '.', $message->{who};
 		}
 		elsif($hit > 7)
 		{
@@ -189,14 +198,13 @@ sub interpret{
 				{
 					$self->{players}{$playerHit}{isA} = 'Duck';
 
-					return sprintf
-						"%s turned into a duck instead of taking damage."
-						, $playerHit;
+					return sprintf "%s turned into a duck instead of taking damage.", $playerHit;
 				}
 			}
 
 			return sprintf
-				'The rock hit %s right in the eye! -20 HP! (%d left)'
+				'%s\'s rock hit %s right in the eye! -20 HP! (%d left)'
+				, $message->{who}
 				, $playerHit
 				, $self->{players}{$playerHit}{hp};
 		}
@@ -232,6 +240,7 @@ sub interpret{
 
 	if($message->{body} =~ /get players/)
 	{
+		return;
 		return join ', ', map{
 			$_ . ':' . $self->{players}{$_}{hp};
 		} (keys %{ $self->{players} });
@@ -248,6 +257,7 @@ sub registerPlayer{
 			hp => 100
 			, isA => 0
 			, isOnFire => 0
+			, lastTurn => 0
 		};
 	}
 }
